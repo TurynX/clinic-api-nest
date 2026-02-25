@@ -36,7 +36,7 @@ model User {
   id        String     @id @default(uuid())
   email     String  @unique
   password  String
-  name      String?
+  name      String
   role      Role
   createdAt DateTime @default(now())
   doctorAppointments Appointment[]
@@ -68,13 +68,13 @@ model Patient {
 
 model Appointment {
   id        String     @id @default(uuid())
-  date      DateTime
-  status    Status @default(SCHEDULED)
-  createdAt DateTime @default(now())
   patientName String
   doctorName String
   patientId String
   doctorId  String
+  scheduleAt  DateTime
+  status    Status @default(SCHEDULED)
   patient Patient @relation(fields: [patientId], references: [id])
   doctor  User    @relation(fields: [doctorId], references: [id])
+  createdAt DateTime @default(now())
 }

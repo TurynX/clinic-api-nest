@@ -5,9 +5,10 @@ import { PatientsModule } from './patients/patients.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './common/guards/auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
+import { AppointmentsModule } from './appointments/appointments.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, PatientsModule],
+  imports: [PrismaModule, AuthModule, PatientsModule, AppointmentsModule],
   providers: [
     {
       provide: APP_GUARD,
