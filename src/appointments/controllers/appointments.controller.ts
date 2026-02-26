@@ -7,7 +7,7 @@ import {
   Get,
   Delete,
 } from '@nestjs/common';
-import { AppointmentsService } from '../services/appointments';
+import { AppointmentsService } from '../services/appointments.service';
 import { CreateAppointmentDto } from '../dto/createAppointment.dto';
 import { Roles } from 'src/common/decorator/roles.decorator';
 import { UpdateAppointmentDto } from '../dto/updateAppointment.dto';

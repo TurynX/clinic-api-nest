@@ -1,0 +1,1216 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Clinic API</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0a0a0f;
+        --surface: #111118;
+        --border: #1e1e2e;
+        --accent: #00ff88;
+        --accent2: #0088ff;
+        --danger: #ff3366;
+        --warn: #ffaa00;
+        --text: #e0e0f0;
+        --muted: #555570;
+        --get: #00cc66;
+        --post: #0088ff;
+        --put: #ffaa00;
+        --delete: #ff3366;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'JetBrains Mono', monospace;
+        min-height: 100vh;
+        display: flex;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        width: 280px;
+        min-height: 100vh;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        overflow-y: auto;
+      }
+
+      .logo {
+        padding: 24px 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .logo h1 {
+        font-family: 'Syne', sans-serif;
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--accent);
+        letter-spacing: -0.5px;
+      }
+
+      .logo span {
+        font-size: 11px;
+        color: var(--muted);
+        display: block;
+        margin-top: 2px;
+      }
+
+      .base-url {
+        padding: 12px 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .base-url label {
+        font-size: 10px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      .base-url input {
+        width: 100%;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 6px 8px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        border-radius: 4px;
+        margin-top: 6px;
+      }
+
+      .token-display {
+        padding: 12px 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .token-display label {
+        font-size: 10px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      .token-value {
+        font-size: 10px;
+        color: var(--accent);
+        word-break: break-all;
+        margin-top: 6px;
+        line-height: 1.4;
+        min-height: 16px;
+      }
+
+      .nav-section {
+        padding: 16px 20px 8px;
+        font-size: 10px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+      }
+
+      .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 20px;
+        cursor: pointer;
+        transition: background 0.15s;
+        border-left: 2px solid transparent;
+        font-size: 12px;
+      }
+
+      .nav-item:hover {
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .nav-item.active {
+        background: rgba(0, 255, 136, 0.05);
+        border-left-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .method-badge {
+        font-size: 9px;
+        font-weight: 700;
+        padding: 2px 5px;
+        border-radius: 3px;
+        min-width: 36px;
+        text-align: center;
+      }
+
+      .badge-get {
+        background: rgba(0, 204, 102, 0.15);
+        color: var(--get);
+      }
+      .badge-post {
+        background: rgba(0, 136, 255, 0.15);
+        color: var(--post);
+      }
+      .badge-put {
+        background: rgba(255, 170, 0, 0.15);
+        color: var(--put);
+      }
+      .badge-delete {
+        background: rgba(255, 51, 102, 0.15);
+        color: var(--delete);
+      }
+
+      /* Main */
+      .main {
+        margin-left: 280px;
+        flex: 1;
+        padding: 32px;
+        max-width: calc(100vw - 280px);
+      }
+
+      .route-panel {
+        display: none;
+      }
+      .route-panel.active {
+        display: block;
+        animation: fadeIn 0.2s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .panel-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 28px;
+      }
+
+      .panel-method {
+        font-size: 13px;
+        font-weight: 700;
+        padding: 5px 12px;
+        border-radius: 5px;
+      }
+
+      .panel-path {
+        font-family: 'Syne', sans-serif;
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text);
+      }
+
+      .panel-desc {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 24px;
+        line-height: 1.6;
+      }
+
+      .section-title {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: var(--muted);
+        margin-bottom: 10px;
+      }
+
+      .form-grid {
+        display: grid;
+        gap: 14px;
+        margin-bottom: 24px;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .field label {
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .field input,
+      .field select,
+      .field textarea {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 10px 12px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        border-radius: 6px;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+
+      .field input:focus,
+      .field select:focus,
+      .field textarea:focus {
+        border-color: var(--accent);
+      }
+
+      .field textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+
+      .send-btn {
+        background: var(--accent);
+        color: #000;
+        border: none;
+        padding: 11px 28px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 12px;
+        font-weight: 700;
+        border-radius: 6px;
+        cursor: pointer;
+        transition:
+          opacity 0.2s,
+          transform 0.1s;
+        letter-spacing: 0.5px;
+      }
+
+      .send-btn:hover {
+        opacity: 0.85;
+      }
+      .send-btn:active {
+        transform: scale(0.98);
+      }
+      .send-btn.loading {
+        opacity: 0.5;
+        pointer-events: none;
+      }
+
+      .response-box {
+        margin-top: 24px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .response-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--border);
+        font-size: 11px;
+      }
+
+      .status-ok {
+        color: var(--get);
+      }
+      .status-err {
+        color: var(--danger);
+      }
+
+      .response-body {
+        padding: 16px;
+        font-size: 12px;
+        line-height: 1.7;
+        white-space: pre-wrap;
+        word-break: break-all;
+        max-height: 400px;
+        overflow-y: auto;
+        color: #a0a0c0;
+      }
+
+      .divider {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 28px 0;
+      }
+
+      .auth-note {
+        font-size: 11px;
+        color: var(--warn);
+        padding: 8px 12px;
+        background: rgba(255, 170, 0, 0.05);
+        border: 1px solid rgba(255, 170, 0, 0.15);
+        border-radius: 5px;
+        margin-bottom: 20px;
+      }
+
+      ::-webkit-scrollbar {
+        width: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--border);
+        border-radius: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="logo">
+        <h1>⚕ Clinic API</h1>
+        <span>NestJS · localhost:3000</span>
+      </div>
+
+      <div class="base-url">
+        <label>Base URL</label>
+        <input id="baseUrl" value="http://localhost:3000" />
+      </div>
+
+      <div class="token-display">
+        <label>Access Token</label>
+        <div class="token-value" id="tokenPreview">—</div>
+      </div>
+
+      <div class="nav-section">Auth</div>
+      <div class="nav-item active" onclick="show('signup')">
+        <span class="method-badge badge-post">POST</span>/auth/signup
+      </div>
+      <div class="nav-item" onclick="show('signin')">
+        <span class="method-badge badge-post">POST</span>/auth/signin
+      </div>
+      <div class="nav-item" onclick="show('refresh')">
+        <span class="method-badge badge-post">POST</span>/auth/refresh
+      </div>
+      <div class="nav-item" onclick="show('logout')">
+        <span class="method-badge badge-post">POST</span>/auth/logout
+      </div>
+      <div class="nav-item" onclick="show('profile')">
+        <span class="method-badge badge-get">GET</span>/auth/profile
+      </div>
+
+      <div class="nav-section">Dashboard</div>
+      <div class="nav-item" onclick="show('dashboard')">
+        <span class="method-badge badge-get">GET</span>/dashboard
+      </div>
+
+      <div class="nav-section">Patients</div>
+      <div class="nav-item" onclick="show('pCreate')">
+        <span class="method-badge badge-post">POST</span>/patients/create
+      </div>
+      <div class="nav-item" onclick="show('pGetAll')">
+        <span class="method-badge badge-get">GET</span>/patients/getAll
+      </div>
+      <div class="nav-item" onclick="show('pGetOne')">
+        <span class="method-badge badge-get">GET</span>/patients/:id
+      </div>
+      <div class="nav-item" onclick="show('pUpdate')">
+        <span class="method-badge badge-put">PUT</span>/patients/update/:id
+      </div>
+      <div class="nav-item" onclick="show('pDelete')">
+        <span class="method-badge badge-delete">DEL</span>/patients/delete/:id
+      </div>
+
+      <div class="nav-section">Appointments</div>
+      <div class="nav-item" onclick="show('aCreate')">
+        <span class="method-badge badge-post">POST</span>/appointments/create
+      </div>
+      <div class="nav-item" onclick="show('aGetAll')">
+        <span class="method-badge badge-get">GET</span>/appointments
+      </div>
+      <div class="nav-item" onclick="show('aGetOne')">
+        <span class="method-badge badge-get">GET</span>/appointments/:id
+      </div>
+      <div class="nav-item" onclick="show('aUpdate')">
+        <span class="method-badge badge-put">PUT</span>/appointments/update/:id
+      </div>
+      <div class="nav-item" onclick="show('aDelete')">
+        <span class="method-badge badge-delete">DEL</span>/appointments/:id
+      </div>
+    </aside>
+
+    <main class="main">
+      <!-- SIGNUP -->
+      <div class="route-panel active" id="panel-signup">
+        <div class="panel-header">
+          <span
+            class="panel-method badge-post method-badge"
+            style="font-size: 13px; padding: 5px 12px"
+            >POST</span
+          >
+          <span class="panel-path">/auth/signup</span>
+        </div>
+        <p class="panel-desc">Cria um novo usuário. Não requer autenticação.</p>
+        <div class="section-title">Body</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>name</label
+            ><input id="signup-name" placeholder="João Silva" />
+          </div>
+          <div class="field">
+            <label>email</label
+            ><input
+              id="signup-email"
+              type="email"
+              placeholder="joao@email.com"
+            />
+          </div>
+          <div class="field">
+            <label>password</label
+            ><input
+              id="signup-password"
+              type="password"
+              placeholder="••••••••"
+            />
+          </div>
+          <div class="field">
+            <label>role</label>
+            <select id="signup-role">
+              <option value="ADMIN">ADMIN</option>
+              <option value="DOCTOR">DOCTOR</option>
+              <option value="RECEPTIONIST">RECEPTIONIST</option>
+            </select>
+          </div>
+        </div>
+        <button class="send-btn" onclick="send('signup')">→ SEND</button>
+        <div class="response-box" id="res-signup" style="display: none">
+          <div class="response-header">
+            <span>Response</span><span id="status-signup"></span>
+          </div>
+          <pre class="response-body" id="body-signup"></pre>
+        </div>
+      </div>
+
+      <!-- SIGNIN -->
+      <div class="route-panel" id="panel-signin">
+        <div class="panel-header">
+          <span
+            class="panel-method badge-post method-badge"
+            style="font-size: 13px; padding: 5px 12px"
+            >POST</span
+          >
+          <span class="panel-path">/auth/signin</span>
+        </div>
+        <p class="panel-desc">
+          Autentica o usuário. Salva o accessToken e refreshToken
+          automaticamente.
+        </p>
+        <div class="form-grid">
+          <div class="field">
+            <label>email</label
+            ><input
+              id="signin-email"
+              type="email"
+              placeholder="joao@email.com"
+            />
+          </div>
+          <div class="field">
+            <label>password</label
+            ><input
+              id="signin-password"
+              type="password"
+              placeholder="••••••••"
+            />
+          </div>
+        </div>
+        <button class="send-btn" onclick="send('signin')">→ SEND</button>
+        <div class="response-box" id="res-signin" style="display: none">
+          <div class="response-header">
+            <span>Response</span><span id="status-signin"></span>
+          </div>
+          <pre class="response-body" id="body-signin"></pre>
+        </div>
+      </div>
+
+      <!-- REFRESH -->
+      <div class="route-panel" id="panel-refresh">
+        <div class="panel-header">
+          <span
+            class="panel-method badge-post method-badge"
+            style="font-size: 13px; padding: 5px 12px"
+            >POST</span
+          >
+          <span class="panel-path">/auth/refresh</span>
+        </div>
+        <p class="panel-desc">
+          Gera novos tokens usando o refreshToken. O refreshToken atual é
+          revogado (token rotation).
+        </p>
+        <div class="form-grid">
+          <div class="field">
+            <label>refreshToken</label
+            ><input
+              id="refresh-token"
+              placeholder="Preenchido automaticamente após signin"
+            />
+          </div>
+        </div>
+        <button class="send-btn" onclick="send('refresh')">→ SEND</button>
+        <div class="response-box" id="res-refresh" style="display: none">
+          <div class="response-header">
+            <span>Response</span><span id="status-refresh"></span>
+          </div>
+          <pre class="response-body" id="body-refresh"></pre>
+        </div>
+      </div>
+
+      <!-- LOGOUT -->
+      <div class="route-panel" id="panel-logout">
+        <div class="panel-header">
+          <span
+            class="panel-method badge-post method-badge"
+            style="font-size: 13px; padding: 5px 12px"
+            >POST</span
+          >
+          <span class="panel-path">/auth/logout</span>
+        </div>
+        <p class="panel-desc">
+          Revoga o refreshToken do usuário. Requer accessToken.
+        </p>
+        <div class="auth-note">
+          ⚠ Requer Authorization: Bearer {accessToken}
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>refreshToken</label
+            ><input
+              id="logout-token"
+              placeholder="Preenchido automaticamente após signin"
+            />
+          </div>
+        </div>
+        <button class="send-btn" onclick="send('logout')">→ SEND</button>
+        <div class="response-box" id="res-logout" style="display: none">
+          <div class="response-header">
+            <span>Response</span><span id="status-logout"></span>
+          </div>
+          <pre class="response-body" id="body-logout"></pre>
+        </div>
+      </div>
+
+      <!-- PROFILE -->
+      <div class="route-panel" id="panel-profile">
+        <div class="panel-header">
+          <span
+            class="panel-method badge-get method-badge"
+            style="
+              font-size: 13px;
+              padding: 5px 12px;
+              background: rgba(0, 204, 102, 0.15);
+              color: var(--get);
+            "
+            >GET</span
+          >
+          <span class="panel-path">/auth/profile</span>
+        </div>
+        <p class="panel-desc">Retorna o perfil do usuário autenticado.</p>
+        <div class="auth-note">
+          ⚠ Requer Authorization: Bearer {accessToken}
+        </div>
+        <button class="send-btn" onclick="send('profile')">→ SEND</button>
+        <div class="response-box" id="res-profile" style="display: none">
+          <div class="response-header">
+            <span>Response</span><span id="status-profile"></span>
+          </div>
+          <pre class="response-body" id="body-profile"></pre>
+        </div>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div class="route-panel" id="panel-dashboard">
+        <div class="panel-header">
+          <span
+            class="panel-method badge-get method-badge"
+            style="
+              font-size: 13px;
+              padding: 5px 12px;
+              background: rgba(0, 204, 102, 0.15);
+              color: var(--get);
+            "
+            >GET</span
+          >
+          <span class="panel-path">/dashboard</span>
+        </div>
+        <p class="panel-desc">
+          Retorna dados do dashboard. Requer role
+          <strong style="color: var(--accent)">ADMIN</strong>.
+        </p>
+        <div class="auth-note">
+          ⚠ Requer Authorization: Bearer {accessToken} com role ADMIN
+        </div>
+        <button class="send-btn" onclick="send('dashboard')">→ SEND</button>
+        <div class="response-box" id="res-dashboard" style="display: none">
+          <div class="response-header">
+            <span>Response</span><span id="status-dashboard"></span>
+          </div>
+          <pre class="response-body" id="body-dashboard"></pre>
+        </div>
+      </div>
+
+      <!-- PATIENTS CREATE -->
+      <div class="route-panel" id="panel-pCreate">
+        <div class="panel-header">
+          <span
+            class="panel-method badge-post method-badge"
+            style="font-size: 13px; padding: 5px 12px"
+            >POST</span
+          >
+          <span class="panel-path">/patients/create</span>
+        </div>
+        <div class="auth-note">
+          ⚠ Requer Authorization: Bearer {accessToken}
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>name</label
+            ><input id="pCreate-name" placeholder="Maria Souza" />
+          </div>
+          <div class="field">
+            <label>email</label
+            ><input
+              id="pCreate-email"
+              type="email"
+              placeholder="maria@email.com"
+            />
+          </div>
+          <div class="field">
+            <label>phone</label
+            ><input id="pCreate-phone" placeholder="(48) 99999-9999" />
+          </div>
+          <div class="field">
+            <label>birthDate</label><input id="pCreate-birth" type="date" />
+          </div>
+          <div class="field">
+            <label>Extra (JSON)</label
+            ><textarea
+              id="pCreate-extra"
+              placeholder='{"cpf": "000.000.000-00"}'
+            ></textarea>
+          </div>
+        </div>
+        <button class="send-btn" onclick="send('pCreate')">→ SEND</button>
+        <div class="response-box" id="res-pCreate" style="display: none">
+          <div class="response-header">
+            <span>Response</span><span id="status-pCreate"></span>
+          </div>
+          <pre class="response-body" id="body-pCreate"></pre>
+        </div>
+      </div>
+
+      <!-- PATIENTS GET ALL -->
+      <div class="route-panel" id="panel-pGetAll">
+        <div class="panel-header">
+          <span
+            class="panel-method badge-get method-badge"
+            style="
+              font-size: 13px;
+              padding: 5px 12px;
+              background: rgba(0, 204, 102, 0.15);
+              color: var(--get);
+            "
+            >GET</span
+          >
+          <span class="panel-path">/patients/getAll</span>
+        </div>
+        <div class="auth-note">
+          ⚠ Requer Authorization: Bearer {accessToken}
+        </div>
+        <button class="send-btn" onclick="send('pGetAll')">→ SEND</button>
+        <div class="response-box" id="res-pGetAll" style="display: none">
+          <div class="response-header">
+            <span>Response</span><span id="status-pGetAll"></span>
+          </div>
+          <pre class="response-body" id="body-pGetAll"></pre>
+        </div>
+      </div>
+
+      <!-- PATIENTS GET ONE -->
+      <div class="route-panel" id="panel-pGetOne">
+        <div class="panel-header">
+          <span
+            class="panel-method badge-get method-badge"
+            style="
+              font-size: 13px;
+              padding: 5px 12px;
+              background: rgba(0, 204, 102, 0.15);
+              color: var(--get);
+            "
+            >GET</span
+          >
+          <span class="panel-path">/patients/:id</span>
+        </div>
+        <div class="auth-note">
+          ⚠ Requer Authorization: Bearer {accessToken}
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>id</label
+            ><input id="pGetOne-id" placeholder="uuid do paciente" />
+          </div>
+        </div>
+        <button class="send-btn" onclick="send('pGetOne')">→ SEND</button>
+        <div class="response-box" id="res-pGetOne" style="display: none">
+          <div class="response-header">
+            <span>Response</span><span id="status-pGetOne"></span>
+          </div>
+          <pre class="response-body" id="body-pGetOne"></pre>
+        </div>
+      </div>
+
+      <!-- PATIENTS UPDATE -->
+      <div class="route-panel" id="panel-pUpdate">
+        <div class="panel-header">
+          <span
+            class="panel-method badge-put method-badge"
+            style="
+              font-size: 13px;
+              padding: 5px 12px;
+              background: rgba(255, 170, 0, 0.15);
+              color: var(--put);
+            "
+            >PUT</span
+          >
+          <span class="panel-path">/patients/update/:id</span>
+        </div>
+        <div class="auth-note">
+          ⚠ Requer Authorization: Bearer {accessToken}
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>id</label
+            ><input id="pUpdate-id" placeholder="uuid do paciente" />
+          </div>
+          <div class="field">
+            <label>Body (JSON)</label
+            ><textarea
+              id="pUpdate-body"
+              placeholder='{"name": "Novo Nome"}'
+            ></textarea>
+          </div>
+        </div>
+        <button class="send-btn" onclick="send('pUpdate')">→ SEND</button>
+        <div class="response-box" id="res-pUpdate" style="display: none">
+          <div class="response-header">
+            <span>Response</span><span id="status-pUpdate"></span>
+          </div>
+          <pre class="response-body" id="body-pUpdate"></pre>
+        </div>
+      </div>
+
+      <!-- PATIENTS DELETE -->
+      <div class="route-panel" id="panel-pDelete">
+        <div class="panel-header">
+          <span
+            class="panel-method badge-delete method-badge"
+            style="
+              font-size: 13px;
+              padding: 5px 12px;
+              background: rgba(255, 51, 102, 0.15);
+              color: var(--delete);
+            "
+            >DEL</span
+          >
+          <span class="panel-path">/patients/delete/:id</span>
+        </div>
+        <div class="auth-note">
+          ⚠ Requer Authorization: Bearer {accessToken}
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>id</label
+            ><input id="pDelete-id" placeholder="uuid do paciente" />
+          </div>
+        </div>
+        <button class="send-btn" onclick="send('pDelete')">→ SEND</button>
+        <div class="response-box" id="res-pDelete" style="display: none">
+          <div class="response-header">
+            <span>Response</span><span id="status-pDelete"></span>
+          </div>
+          <pre class="response-body" id="body-pDelete"></pre>
+        </div>
+      </div>
+
+      <!-- APPOINTMENTS CREATE -->
+      <div class="route-panel" id="panel-aCreate">
+        <div class="panel-header">
+          <span
+            class="panel-method badge-post method-badge"
+            style="font-size: 13px; padding: 5px 12px"
+            >POST</span
+          >
+          <span class="panel-path">/appointments/create</span>
+        </div>
+        <div class="auth-note">
+          ⚠ Requer Authorization: Bearer {accessToken}
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>patientId</label
+            ><input id="aCreate-patientId" placeholder="uuid do paciente" />
+          </div>
+          <div class="field">
+            <label>doctorId</label
+            ><input id="aCreate-doctorId" placeholder="uuid do médico" />
+          </div>
+          <div class="field">
+            <label>date</label><input id="aCreate-date" type="datetime-local" />
+          </div>
+          <div class="field">
+            <label>Extra (JSON)</label
+            ><textarea
+              id="aCreate-extra"
+              placeholder='{"notes": "Consulta de rotina"}'
+            ></textarea>
+          </div>
+        </div>
+        <button class="send-btn" onclick="send('aCreate')">→ SEND</button>
+        <div class="response-box" id="res-aCreate" style="display: none">
+          <div class="response-header">
+            <span>Response</span><span id="status-aCreate"></span>
+          </div>
+          <pre class="response-body" id="body-aCreate"></pre>
+        </div>
+      </div>
+
+      <!-- APPOINTMENTS GET ALL -->
+      <div class="route-panel" id="panel-aGetAll">
+        <div class="panel-header">
+          <span
+            class="panel-method badge-get method-badge"
+            style="
+              font-size: 13px;
+              padding: 5px 12px;
+              background: rgba(0, 204, 102, 0.15);
+              color: var(--get);
+            "
+            >GET</span
+          >
+          <span class="panel-path">/appointments</span>
+        </div>
+        <div class="auth-note">
+          ⚠ Requer Authorization: Bearer {accessToken}
+        </div>
+        <button class="send-btn" onclick="send('aGetAll')">→ SEND</button>
+        <div class="response-box" id="res-aGetAll" style="display: none">
+          <div class="response-header">
+            <span>Response</span><span id="status-aGetAll"></span>
+          </div>
+          <pre class="response-body" id="body-aGetAll"></pre>
+        </div>
+      </div>
+
+      <!-- APPOINTMENTS GET ONE -->
+      <div class="route-panel" id="panel-aGetOne">
+        <div class="panel-header">
+          <span
+            class="panel-method badge-get method-badge"
+            style="
+              font-size: 13px;
+              padding: 5px 12px;
+              background: rgba(0, 204, 102, 0.15);
+              color: var(--get);
+            "
+            >GET</span
+          >
+          <span class="panel-path">/appointments/:id</span>
+        </div>
+        <div class="auth-note">
+          ⚠ Requer Authorization: Bearer {accessToken}
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>id</label
+            ><input id="aGetOne-id" placeholder="uuid do agendamento" />
+          </div>
+        </div>
+        <button class="send-btn" onclick="send('aGetOne')">→ SEND</button>
+        <div class="response-box" id="res-aGetOne" style="display: none">
+          <div class="response-header">
+            <span>Response</span><span id="status-aGetOne"></span>
+          </div>
+          <pre class="response-body" id="body-aGetOne"></pre>
+        </div>
+      </div>
+
+      <!-- APPOINTMENTS UPDATE -->
+      <div class="route-panel" id="panel-aUpdate">
+        <div class="panel-header">
+          <span
+            class="panel-method badge-put method-badge"
+            style="
+              font-size: 13px;
+              padding: 5px 12px;
+              background: rgba(255, 170, 0, 0.15);
+              color: var(--put);
+            "
+            >PUT</span
+          >
+          <span class="panel-path">/appointments/update/:id</span>
+        </div>
+        <div class="auth-note">
+          ⚠ Requer Authorization: Bearer {accessToken}
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>id</label
+            ><input id="aUpdate-id" placeholder="uuid do agendamento" />
+          </div>
+          <div class="field">
+            <label>Body (JSON)</label
+            ><textarea
+              id="aUpdate-body"
+              placeholder='{"date": "2026-03-01T10:00"}'
+            ></textarea>
+          </div>
+        </div>
+        <button class="send-btn" onclick="send('aUpdate')">→ SEND</button>
+        <div class="response-box" id="res-aUpdate" style="display: none">
+          <div class="response-header">
+            <span>Response</span><span id="status-aUpdate"></span>
+          </div>
+          <pre class="response-body" id="body-aUpdate"></pre>
+        </div>
+      </div>
+
+      <!-- APPOINTMENTS DELETE -->
+      <div class="route-panel" id="panel-aDelete">
+        <div class="panel-header">
+          <span
+            class="panel-method badge-delete method-badge"
+            style="
+              font-size: 13px;
+              padding: 5px 12px;
+              background: rgba(255, 51, 102, 0.15);
+              color: var(--delete);
+            "
+            >DEL</span
+          >
+          <span class="panel-path">/appointments/:id</span>
+        </div>
+        <div class="auth-note">
+          ⚠ Requer Authorization: Bearer {accessToken}
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>id</label
+            ><input id="aDelete-id" placeholder="uuid do agendamento" />
+          </div>
+        </div>
+        <button class="send-btn" onclick="send('aDelete')">→ SEND</button>
+        <div class="response-box" id="res-aDelete" style="display: none">
+          <div class="response-header">
+            <span>Response</span><span id="status-aDelete"></span>
+          </div>
+          <pre class="response-body" id="body-aDelete"></pre>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      let accessToken = '';
+      let refreshToken = '';
+
+      function show(id) {
+        document
+          .querySelectorAll('.route-panel')
+          .forEach((p) => p.classList.remove('active'));
+        document
+          .querySelectorAll('.nav-item')
+          .forEach((n) => n.classList.remove('active'));
+        document.getElementById('panel-' + id).classList.add('active');
+        event.currentTarget.classList.add('active');
+      }
+
+      function base() {
+        return document.getElementById('baseUrl').value.replace(/\/$/, '');
+      }
+
+      function val(id) {
+        const el = document.getElementById(id);
+        return el ? el.value : '';
+      }
+
+      function setResponse(key, status, data) {
+        const box = document.getElementById('res-' + key);
+        const statusEl = document.getElementById('status-' + key);
+        const bodyEl = document.getElementById('body-' + key);
+        box.style.display = 'block';
+        const ok = status >= 200 && status < 300;
+        statusEl.textContent = status;
+        statusEl.className = ok ? 'status-ok' : 'status-err';
+        bodyEl.textContent = JSON.stringify(data, null, 2);
+      }
+
+      async function req(method, path, body, useAuth) {
+        const headers = { 'Content-Type': 'application/json' };
+        if (useAuth && accessToken)
+          headers['Authorization'] = `Bearer ${accessToken}`;
+        const opts = { method, headers };
+        if (body) opts.body = JSON.stringify(body);
+        const res = await fetch(base() + path, opts);
+        let data;
+        try {
+          data = await res.json();
+        } catch {
+          data = { message: 'No JSON response' };
+        }
+        return { status: res.status, data };
+      }
+
+      async function send(key) {
+        const btn = event.currentTarget;
+        btn.classList.add('loading');
+        btn.textContent = '...';
+        try {
+          let result;
+
+          if (key === 'signup') {
+            result = await req('POST', '/auth/signup', {
+              name: val('signup-name'),
+              email: val('signup-email'),
+              password: val('signup-password'),
+              role: val('signup-role'),
+            });
+          } else if (key === 'signin') {
+            result = await req('POST', '/auth/signin', {
+              email: val('signin-email'),
+              password: val('signin-password'),
+            });
+            if (result.status === 200 || result.status === 201) {
+              accessToken = result.data.accessToken || '';
+              refreshToken = result.data.refreshToken || '';
+              document.getElementById('tokenPreview').textContent = accessToken
+                ? accessToken.substring(0, 40) + '...'
+                : '—';
+              document.getElementById('refresh-token').value = refreshToken;
+              document.getElementById('logout-token').value = refreshToken;
+            }
+          } else if (key === 'refresh') {
+            result = await req('POST', '/auth/refresh', {
+              refreshToken: val('refresh-token'),
+            });
+            if (result.data.accessToken) {
+              accessToken = result.data.accessToken;
+              refreshToken = result.data.refreshToken;
+              document.getElementById('tokenPreview').textContent =
+                accessToken.substring(0, 40) + '...';
+              document.getElementById('refresh-token').value = refreshToken;
+              document.getElementById('logout-token').value = refreshToken;
+            }
+          } else if (key === 'logout') {
+            result = await req(
+              'POST',
+              '/auth/logout',
+              { refreshToken: val('logout-token') },
+              true,
+            );
+            if (result.status === 200 || result.status === 201) {
+              accessToken = '';
+              refreshToken = '';
+              document.getElementById('tokenPreview').textContent = '—';
+            }
+          } else if (key === 'profile') {
+            result = await req('GET', '/auth/profile', null, true);
+          } else if (key === 'dashboard') {
+            result = await req('GET', '/dashboard', null, true);
+          } else if (key === 'pCreate') {
+            let body = {
+              name: val('pCreate-name'),
+              email: val('pCreate-email'),
+              phone: val('pCreate-phone'),
+              birthDate: val('pCreate-birth'),
+            };
+            try {
+              const extra = JSON.parse(val('pCreate-extra') || '{}');
+              Object.assign(body, extra);
+            } catch {}
+            result = await req('POST', '/patients/create', body, true);
+          } else if (key === 'pGetAll') {
+            result = await req('GET', '/patients/getAll', null, true);
+          } else if (key === 'pGetOne') {
+            result = await req(
+              'GET',
+              `/patients/${val('pGetOne-id')}`,
+              null,
+              true,
+            );
+          } else if (key === 'pUpdate') {
+            let body = {};
+            try {
+              body = JSON.parse(val('pUpdate-body') || '{}');
+            } catch {}
+            result = await req(
+              'PUT',
+              `/patients/update/${val('pUpdate-id')}`,
+              body,
+              true,
+            );
+          } else if (key === 'pDelete') {
+            result = await req(
+              'DELETE',
+              `/patients/delete/${val('pDelete-id')}`,
+              null,
+              true,
+            );
+          } else if (key === 'aCreate') {
+            let body = {
+              patientId: val('aCreate-patientId'),
+              doctorId: val('aCreate-doctorId'),
+              date: val('aCreate-date'),
+            };
+            try {
+              const extra = JSON.parse(val('aCreate-extra') || '{}');
+              Object.assign(body, extra);
+            } catch {}
+            result = await req('POST', '/appointments/create', body, true);
+          } else if (key === 'aGetAll') {
+            result = await req('GET', '/appointments', null, true);
+          } else if (key === 'aGetOne') {
+            result = await req(
+              'GET',
+              `/appointments/${val('aGetOne-id')}`,
+              null,
+              true,
+            );
+          } else if (key === 'aUpdate') {
+            let body = {};
+            try {
+              body = JSON.parse(val('aUpdate-body') || '{}');
+            } catch {}
+            result = await req(
+              'PUT',
+              `/appointments/update/${val('aUpdate-id')}`,
+              body,
+              true,
+            );
+          } else if (key === 'aDelete') {
+            result = await req(
+              'DELETE',
+              `/appointments/${val('aDelete-id')}`,
+              null,
+              true,
+            );
+          }
+
+          setResponse(key, result.status, result.data);
+        } catch (e) {
+          setResponse(key, 0, { error: e.message });
+        } finally {
+          btn.classList.remove('loading');
+          btn.textContent = '→ SEND';
+        }
+      }
+    </script>
+  </body>
+</html>

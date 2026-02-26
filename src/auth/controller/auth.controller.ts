@@ -1,49 +1,34 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { AuthService } from '../service/auth.service';
 import { CreateUserDto } from '../dto/createUser.dto';
-import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from '../dto/login.dto';
 import { Public } from '../../common/decorator/public.decorator';
 import { User } from 'src/common/decorator/user.decorator';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private authService: AuthService,
-    private jwtService: JwtService,
-  ) {}
+  constructor(private authService: AuthService) {}
   @Public()
   @Post('signup')
-  async signup(@Body() body: CreateUserDto) {
-    const user = await this.authService.signup(body);
-    if (!user) {
-      throw new UnauthorizedException('User already exists');
-    }
-
-    return user;
+  signup(@Body() body: CreateUserDto) {
+    return this.authService.signup(body);
   }
+
   @Public()
   @Post('signin')
-  async signin(@Body() body: LoginDto) {
-    const user = await this.authService.signin(body);
+  signin(@Body() body: LoginDto) {
+    return this.authService.signin(body);
+  }
 
-    const payload = {
-      sub: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    };
+  @Public()
+  @Post('refresh')
+  refreshToken(@Body() body: { refreshToken: string }) {
+    return this.authService.refreshToken(body.refreshToken);
+  }
 
-    return {
-      user,
-      token: await this.jwtService.signAsync(payload),
-    };
+  @Post('logout')
+  logout(@Body() body: { refreshToken: string }, @User() user: any) {
+    return this.authService.logout(body.refreshToken, user.sub);
   }
 
   @Get('profile')
